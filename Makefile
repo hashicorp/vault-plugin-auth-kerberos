@@ -1,5 +1,5 @@
 TOOL?=vault-plugin-auth-kerberos
-TEST?=$$(go list ./... | grep -v /vendor/)
+TEST?=$$(go list ./... | grep -v /vendor/ | grep -v cmd)
 VETARGS?=-asmdecl -atomic -bool -buildtags -copylocks -methods -nilfunc -printf -rangeloops -shift -structtags -unsafeptr
 EXTERNAL_TOOLS=\
 	github.com/mitchellh/gox \
