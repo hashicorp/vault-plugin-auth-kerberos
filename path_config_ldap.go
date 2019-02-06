@@ -24,33 +24,33 @@ func pathConfigLdap(b *backend) *framework.Path {
 	return &framework.Path{
 		Pattern: `config/ldap`,
 		Fields: map[string]*framework.FieldSchema{
-			"url": &framework.FieldSchema{
+			"url": {
 				Type:        framework.TypeString,
 				Default:     "ldap://127.0.0.1",
 				Description: "LDAP URL to connect to (default: ldap://127.0.0.1). Multiple URLs can be specified by concatenating them with commas; they will be tried in-order.",
 			},
 
-			"userdn": &framework.FieldSchema{
+			"userdn": {
 				Type:        framework.TypeString,
 				Description: "LDAP domain to use for users (eg: ou=People,dc=example,dc=org)",
 			},
 
-			"binddn": &framework.FieldSchema{
+			"binddn": {
 				Type:        framework.TypeString,
 				Description: "LDAP DN for searching for the user DN (optional)",
 			},
 
-			"bindpass": &framework.FieldSchema{
+			"bindpass": {
 				Type:        framework.TypeString,
 				Description: "LDAP password for searching for the user DN (optional)",
 			},
 
-			"groupdn": &framework.FieldSchema{
+			"groupdn": {
 				Type:        framework.TypeString,
 				Description: "LDAP search base to use for group membership search (eg: ou=Groups,dc=example,dc=org)",
 			},
 
-			"groupfilter": &framework.FieldSchema{
+			"groupfilter": {
 				Type:    framework.TypeString,
 				Default: "(|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}}))",
 				Description: `Go template for querying group membership of user (optional)
@@ -59,7 +59,7 @@ Example: (&(objectClass=group)(member:1.2.840.113556.1.4.1941:={{.UserDN}}))
 Default: (|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}}))`,
 			},
 
-			"groupattr": &framework.FieldSchema{
+			"groupattr": {
 				Type:    framework.TypeString,
 				Default: "cn",
 				Description: `LDAP attribute to follow on objects returned by <groupfilter>
@@ -68,49 +68,49 @@ Examples: "cn" or "memberOf", etc.
 Default: cn`,
 			},
 
-			"upndomain": &framework.FieldSchema{
+			"upndomain": {
 				Type:        framework.TypeString,
 				Description: "Enables userPrincipalDomain login with [username]@UPNDomain (optional)",
 			},
 
-			"userattr": &framework.FieldSchema{
+			"userattr": {
 				Type:        framework.TypeString,
 				Default:     "cn",
 				Description: "Attribute used for users (default: cn)",
 			},
 
-			"certificate": &framework.FieldSchema{
+			"certificate": {
 				Type:        framework.TypeString,
 				Description: "CA certificate to use when verifying LDAP server certificate, must be x509 PEM encoded (optional)",
 			},
 
-			"discoverdn": &framework.FieldSchema{
+			"discoverdn": {
 				Type:        framework.TypeBool,
 				Description: "Use anonymous bind to discover the bind DN of a user (optional)",
 			},
 
-			"insecure_tls": &framework.FieldSchema{
+			"insecure_tls": {
 				Type:        framework.TypeBool,
 				Description: "Skip LDAP server SSL Certificate verification - VERY insecure (optional)",
 			},
 
-			"starttls": &framework.FieldSchema{
+			"starttls": {
 				Type:        framework.TypeBool,
 				Description: "Issue a StartTLS command after establishing unencrypted connection (optional)",
 			},
 
-			"tls_min_version": &framework.FieldSchema{
+			"tls_min_version": {
 				Type:        framework.TypeString,
 				Default:     "tls12",
 				Description: "Minimum TLS version to use. Accepted values are 'tls10', 'tls11' or 'tls12'. Defaults to 'tls12'",
 			},
 
-			"tls_max_version": &framework.FieldSchema{
+			"tls_max_version": {
 				Type:        framework.TypeString,
 				Default:     "tls12",
 				Description: "Maximum TLS version to use. Accepted values are 'tls10', 'tls11' or 'tls12'. Defaults to 'tls12'",
 			},
-			"deny_null_bind": &framework.FieldSchema{
+			"deny_null_bind": {
 				Type:        framework.TypeBool,
 				Default:     true,
 				Description: "Denies an unauthenticated LDAP bind request if the user's password is empty; defaults to true",

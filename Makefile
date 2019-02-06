@@ -56,7 +56,7 @@ fmtcheck:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
 
 fmt:
-	gofmt -w $(GOFMT_FILES)
+	gofmt -w -s $(GOFMT_FILES)
 
 
 .PHONY: bin default generate test vet bootstrap fmt fmtcheck

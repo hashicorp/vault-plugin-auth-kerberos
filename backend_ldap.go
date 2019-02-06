@@ -239,7 +239,7 @@ func (b *backend) getLdapGroups(cfg *ConfigEntry, c *ldap.Conn, userDN string, u
 	}
 
 	ldapGroups := make([]string, 0, len(ldapMap))
-	for key, _ := range ldapMap {
+	for key := range ldapMap {
 		ldapGroups = append(ldapGroups, key)
 	}
 

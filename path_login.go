@@ -21,7 +21,7 @@ func pathLogin(b *backend) *framework.Path {
 	return &framework.Path{
 		Pattern: "login$",
 		Fields: map[string]*framework.FieldSchema{
-			"authorization": &framework.FieldSchema{
+			"authorization": {
 				Type:        framework.TypeString,
 				Description: `SPNEGO Authorization header. Required.`,
 			},
