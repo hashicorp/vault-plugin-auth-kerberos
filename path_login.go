@@ -73,12 +73,12 @@ func (b *backend) pathLogin(ctx context.Context, req *logical.Request, d *framew
 		return nil, err
 	}
 	if config == nil {
-		return nil, errors.New("Could not load backend configuration")
+		return nil, errors.New("could not load backend configuration")
 	}
 
 	kt, err := parseKeytab(config.Keytab)
 	if err != nil {
-		return nil, fmt.Errorf("Could not load keytab: %v", err)
+		return nil, fmt.Errorf("could not load keytab: %v", err)
 	}
 
 	ldapConfig, err := b.ConfigLdap(ctx, req)
@@ -91,7 +91,7 @@ func (b *backend) pathLogin(ctx context.Context, req *logical.Request, d *framew
 
 	ldapConnection, err := ldapConfig.DialLDAP()
 	if err != nil {
-		return nil, fmt.Errorf("Could not connect to LDAP: %v", err)
+		return nil, fmt.Errorf("could not connect to LDAP: %v", err)
 	}
 	if ldapConnection == nil {
 		return nil, errors.New("invalid connection returned from LDAP dial")
@@ -114,7 +114,7 @@ func (b *backend) pathLogin(ctx context.Context, req *logical.Request, d *framew
 	}
 	authorization, err := base64.StdEncoding.DecodeString(s[1])
 	if err != nil {
-		return nil, fmt.Errorf("Could not base64 decode authorization: %v", err)
+		return nil, fmt.Errorf("could not base64 decode authorization: %v", err)
 	}
 
 	ok, creds, err := spnegoKrb5Authenticate(*kt, config.ServiceAccount, authorization, req.Connection.RemoteAddr)
