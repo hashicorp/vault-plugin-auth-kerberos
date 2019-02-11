@@ -37,6 +37,23 @@ func setupTestBackend(t *testing.T) (logical.Backend, logical.Storage) {
 func TestLogin(t *testing.T) {
 	b, storage := setupTestBackend(t)
 
+	cleanup, connURL := prepareLDAPTestContainer(t)
+	defer cleanup()
+
+	ldapReq := &logical.Request{
+		Operation: logical.UpdateOperation,
+		Path:      "config/ldap",
+		Storage:   storage,
+		Data:      map[string]interface{}{
+			"url": connURL,
+		},
+	}
+
+	resp, err := b.HandleRequest(context.Background(), ldapReq)
+	if err != nil || (resp == nil && resp.IsError()) {
+		t.Fatalf("err: %s resp: %#v\n", err, resp)
+	}
+
 	data := map[string]interface{}{
 		"authorization": "",
 	}
@@ -48,7 +65,7 @@ func TestLogin(t *testing.T) {
 		Data:      data,
 	}
 
-	resp, err := b.HandleRequest(context.Background(), req)
+	resp, err = b.HandleRequest(context.Background(), req)
 	if err != nil || resp == nil {
 		t.Fatalf("err: %s resp: %#v\n", err, resp)
 	}
@@ -57,7 +74,7 @@ func TestLogin(t *testing.T) {
 	}
 }
 
-func prepareLDAPAuthTestContainer(t *testing.T) (cleanup func(), retURL string) {
+func prepareLDAPTestContainer(t *testing.T) (cleanup func(), retURL string) {
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		t.Fatalf("Failed to connect to docker: %s", err)
@@ -66,7 +83,7 @@ func prepareLDAPAuthTestContainer(t *testing.T) (cleanup func(), retURL string) 
 	runOpts := &dockertest.RunOptions{
 		Repository: "osixia/openldap",
 		Tag:        "latest",
-		Env: 		[]string{"LDAP_TLS=false"},
+		Env:        []string{"LDAP_TLS=false"},
 	}
 	resource, err := pool.RunWithOptions(runOpts)
 	if err != nil {
