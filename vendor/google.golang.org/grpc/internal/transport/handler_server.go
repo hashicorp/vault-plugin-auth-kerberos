@@ -24,7 +24,6 @@
 package transport
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -35,6 +34,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
+	"golang.org/x/net/context"
 	"golang.org/x/net/http2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -62,6 +62,9 @@ func NewServerHandlerTransport(w http.ResponseWriter, r *http.Request, stats sta
 	}
 	if _, ok := w.(http.Flusher); !ok {
 		return nil, errors.New("gRPC requires a ResponseWriter supporting http.Flusher")
+	}
+	if _, ok := w.(http.CloseNotifier); !ok {
+		return nil, errors.New("gRPC requires a ResponseWriter supporting http.CloseNotifier")
 	}
 
 	st := &serverHandlerTransport{
@@ -173,11 +176,17 @@ func (a strAddr) String() string { return string(a) }
 
 // do runs fn in the ServeHTTP goroutine.
 func (ht *serverHandlerTransport) do(fn func()) error {
+	// Avoid a panic writing to closed channel. Imperfect but maybe good enough.
 	select {
 	case <-ht.closedCh:
 		return ErrConnClosing
-	case ht.writes <- fn:
-		return nil
+	default:
+		select {
+		case ht.writes <- fn:
+			return nil
+		case <-ht.closedCh:
+			return ErrConnClosing
+		}
 	}
 }
 
@@ -228,8 +237,9 @@ func (ht *serverHandlerTransport) WriteStatus(s *Stream, st *status.Status) erro
 		if ht.stats != nil {
 			ht.stats.HandleRPC(s.Context(), &stats.OutTrailer{})
 		}
+		ht.Close()
+		close(ht.writes)
 	}
-	ht.Close()
 	return err
 }
 
@@ -297,7 +307,7 @@ func (ht *serverHandlerTransport) WriteHeader(s *Stream, md metadata.MD) error {
 func (ht *serverHandlerTransport) HandleStreams(startStream func(*Stream), traceCtx func(context.Context, string) context.Context) {
 	// With this transport type there will be exactly 1 stream: this HTTP request.
 
-	ctx := ht.req.Context()
+	ctx := contextFromRequest(ht.req)
 	var cancel context.CancelFunc
 	if ht.timeoutSet {
 		ctx, cancel = context.WithTimeout(ctx, ht.timeout)
@@ -305,16 +315,22 @@ func (ht *serverHandlerTransport) HandleStreams(startStream func(*Stream), trace
 		ctx, cancel = context.WithCancel(ctx)
 	}
 
-	// requestOver is closed when the status has been written via WriteStatus.
+	// requestOver is closed when either the request's context is done
+	// or the status has been written via WriteStatus.
 	requestOver := make(chan struct{})
+
+	// clientGone receives a single value if peer is gone, either
+	// because the underlying connection is dead or because the
+	// peer sends an http2 RST_STREAM.
+	clientGone := ht.rw.(http.CloseNotifier).CloseNotify()
 	go func() {
 		select {
 		case <-requestOver:
+			return
 		case <-ht.closedCh:
-		case <-ht.req.Context().Done():
+		case <-clientGone:
 		}
 		cancel()
-		ht.Close()
 	}()
 
 	req := ht.req
@@ -391,7 +407,10 @@ func (ht *serverHandlerTransport) HandleStreams(startStream func(*Stream), trace
 func (ht *serverHandlerTransport) runStream() {
 	for {
 		select {
-		case fn := <-ht.writes:
+		case fn, ok := <-ht.writes:
+			if !ok {
+				return
+			}
 			fn()
 		case <-ht.closedCh:
 			return
@@ -422,9 +441,6 @@ func mapRecvMsgError(err error) error {
 		if code, ok := http2ErrConvTab[se.Code]; ok {
 			return status.Error(code, se.Error())
 		}
-	}
-	if strings.Contains(err.Error(), "body closed by handler") {
-		return status.Error(codes.Canceled, err.Error())
 	}
 	return connectionErrorf(true, err, err.Error())
 }
