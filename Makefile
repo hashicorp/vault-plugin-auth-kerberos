@@ -2,8 +2,7 @@ TOOL?=vault-plugin-auth-kerberos
 TEST?=$$(go list ./... | grep -v /vendor/)
 VETARGS?=-asmdecl -atomic -bool -buildtags -copylocks -methods -nilfunc -printf -rangeloops -shift -structtags -unsafeptr
 EXTERNAL_TOOLS=\
-	github.com/mitchellh/gox \
-	github.com/golang/dep/cmd/dep
+	github.com/mitchellh/gox
 BUILD_TAGS?=${TOOL}
 GOFMT_FILES?=$$(find . -name '*.go' | grep -v vendor)
 
