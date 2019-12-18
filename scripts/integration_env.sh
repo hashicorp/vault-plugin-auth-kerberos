@@ -1,4 +1,6 @@
 #!/bin/bash
+# this script assumes that the host system has successfully run
+# pip install --quiet requests-kerberos
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
   base64cmd="base64 -D"
@@ -119,21 +121,6 @@ function main() {
   }
 " > ${TESTS_DIR}/integration/krb5.conf
 
-  echo "
-import kerberos
-import requests
-
-host = \"localhost.${DNS_NAME}:${VAULT_PORT}\"
-service = \"HTTP@{}\".format(host)
-rc, vc = kerberos.authGSSClientInit(service=service, mech_oid=kerberos.GSS_MECH_OID_SPNEGO)
-kerberos.authGSSClientStep(vc, \"\")
-kerberos_token = kerberos.authGSSClientResponse(vc)
-
-r = requests.post(\"http://localhost:8200/v1/auth/kerberos/login\",
-                  headers={'Authorization': 'Negotiate ' + kerberos_token})
-print('Vault token through Python:', r.json()['auth']['client_token'])
-" > ${TESTS_DIR}/integration/manual_test.py
-
   # execute a login from go and record result
   go run cmd/login-kerb/main.go \
     -username=$DOMAIN_USER_ACCOUNT \
@@ -144,17 +131,8 @@ print('Vault token through Python:', r.json()['auth']['client_token'])
     -vault_addr="http://localhost:8200"
   go_login_result=$?
 
-  # execute a login from python and record result
-  pip install --quiet requests-kerberos
-  python $TESTS_DIR/integration/manual_test.py
-  python_login_result=$?
-
   docker rm -f ${SAMBA_CONTAINER}
 
-  if [ ! $python_login_result = 0 ]; then
-    echo "python login failed"
-    return $python_login_result
-  fi
   if [ ! $go_login_result = 0 ]; then
     echo "go login failed"
     return $go_login_result
