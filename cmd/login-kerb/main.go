@@ -91,6 +91,7 @@ func main() {
 		fmt.Printf("couldn't get auth header: %s", err)
 		os.Exit(1)
 	}
+	fmt.Printf("go auth header: %s\n", authHeaderVal)
 
 	req, err := http.NewRequest(http.MethodPost, vaultAddr+"/v1/auth/kerberos/login", nil)
 	if err != nil {
