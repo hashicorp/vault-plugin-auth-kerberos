@@ -8,11 +8,11 @@ import (
 	"strings"
 
 	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/gokrb5/client"
-	"github.com/hashicorp/gokrb5/config"
-	"github.com/hashicorp/gokrb5/keytab"
-	"github.com/hashicorp/gokrb5/spnego"
 	"github.com/hashicorp/vault/api"
+	"github.com/jcmturner/gokrb5/v8/client"
+	"github.com/jcmturner/gokrb5/v8/config"
+	"github.com/jcmturner/gokrb5/v8/keytab"
+	"github.com/jcmturner/gokrb5/v8/spnego"
 )
 
 // CLIHandler fulfills Vault's LoginHandler interface.
