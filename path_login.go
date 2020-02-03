@@ -21,6 +21,8 @@ import (
 	"gopkg.in/jcmturner/goidentity.v3"
 )
 
+const ctxCredentials = "github.com/jcmturner/gokrb5/v8/ctxCredentials"
+
 func (b *backend) pathLogin() *framework.Path {
 	return &framework.Path{
 		Pattern: "login$",
@@ -114,7 +116,7 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 	authenticated := false
 	var identity goidentity.Identity
 	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		raw := r.Context().Value(spnego.CTXKeyCredentials)
+		raw := r.Context().Value(ctxCredentials)
 		if raw == nil {
 			w.WriteHeader(400)
 			_, _ = w.Write([]byte("identity credentials are not included"))

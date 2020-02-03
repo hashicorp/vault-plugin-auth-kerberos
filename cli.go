@@ -131,7 +131,7 @@ func GetAuthHeaderVal(loginCfg *LoginCfg) (string, error) {
 		return "", errwrap.Wrapf("couldn't parse krb5Conf: {{err}}", err)
 	}
 
-	cl := client.NewClientWithKeytab(loginCfg.Username, loginCfg.Realm, kt, krb5Conf, client.AssumePreAuthentication(true))
+	cl := client.NewWithKeytab(loginCfg.Username, loginCfg.Realm, kt, krb5Conf, client.AssumePreAuthentication(true))
 	if err := cl.Login(); err != nil {
 		return "", errwrap.Wrapf("couldn't log in: {{err}}", err)
 	}
