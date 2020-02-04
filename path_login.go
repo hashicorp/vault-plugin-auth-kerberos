@@ -21,8 +21,6 @@ import (
 	"gopkg.in/jcmturner/goidentity.v3"
 )
 
-const ctxCredentials = "github.com/jcmturner/gokrb5/v8/ctxCredentials"
-
 func (b *backend) pathLogin() *framework.Path {
 	return &framework.Path{
 		Pattern: "login$",
