@@ -116,7 +116,7 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 	authenticated := false
 	var identity goidentity.Identity
 	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		raw := r.Context().Value(ctxCredentials)
+		raw := r.Context().Value(goidentity.CTXKey)
 		if raw == nil {
 			w.WriteHeader(400)
 			_, _ = w.Write([]byte("identity credentials are not included"))
