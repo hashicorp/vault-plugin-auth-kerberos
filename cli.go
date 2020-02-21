@@ -131,7 +131,7 @@ type LoginCfg struct {
 	// a mechanism for tunneling pre-authentication exchanges using armoured
 	// KDC messages. FAST provides increased resistance to passive password
 	// guessing attacks.
-	// Active Directory does not commonly support FAST negotiation.
+	// Some common Kerberos implementations do not support FAST negotiation.
 	DisableFASTNegotiation bool
 }
 
