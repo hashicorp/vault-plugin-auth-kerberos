@@ -91,8 +91,8 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 	}
 
 	authorizationString := ""
-	authorizationHeaders := req.Headers["Authorization"]
-	if len(authorizationHeaders) > 0 {
+	authorizationHeaders, hasAuthorizationHeader := req.Headers["Authorization"]
+	if hasAuthorizationHeader && len(authorizationHeaders) > 0 {
 		authorizationString = authorizationHeaders[0]
 	} else {
 		authorizationString = d.Get("authorization").(string)
