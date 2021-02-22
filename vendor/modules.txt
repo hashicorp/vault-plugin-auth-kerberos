@@ -271,12 +271,8 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d
-gopkg.in/asn1-ber.v1
 # gopkg.in/jcmturner/goidentity.v3 v3.0.0
 gopkg.in/jcmturner/goidentity.v3
-# gopkg.in/ldap.v3 v3.0.3
-gopkg.in/ldap.v3
 # gopkg.in/square/go-jose.v2 v2.3.1
 gopkg.in/square/go-jose.v2
 gopkg.in/square/go-jose.v2/cipher
