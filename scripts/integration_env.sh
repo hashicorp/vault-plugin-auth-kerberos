@@ -56,7 +56,9 @@ function delete_network() {
 
 function start_vault() {
   VAULT_CONTAINER=$(docker run --net=${DNS_NAME} -d -ti --cap-add=IPC_LOCK \
-    -v $(pwd)/pkg/linux_amd64:/plugins:Z -e "VAULT_DEV_ROOT_TOKEN_ID=${VAULT_TOKEN}" \
+    -v "$(pwd)/pkg/linux_amd64:/plugins:Z" \
+    -v "${TESTS_DIR}/integration:/tests:Z" \
+    -e "VAULT_DEV_ROOT_TOKEN_ID=${VAULT_TOKEN}" \
     -e "VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:${VAULT_PORT}" \
     -p ${VAULT_PORT}:${VAULT_PORT} \
     hashicorp/vault:${VAULT_VER} server -dev -dev-plugin-dir=/plugins)
@@ -132,6 +134,8 @@ function create_keytab() {
 
   docker exec $SAMBA_CONTAINER \
     base64 ${username}.keytab > ${username}.keytab.base64
+  # make a copy of the keytab for access from docker containers
+  cp "${username}.keytab.base64" "${TESTS_DIR}/integration/."
 }
 
 function add_vault_spn() {
@@ -153,10 +157,11 @@ function enable_plugin() {
   VAULT_PLUGIN_SHA=$(openssl dgst -sha256 pkg/linux_amd64/vault-plugin-auth-kerberos|cut -d ' ' -f2)
   exec_vault write sys/plugins/catalog/auth/kerberos sha_256=${VAULT_PLUGIN_SHA} command="vault-plugin-auth-kerberos"
   exec_vault auth enable -passthrough-request-headers=Authorization -allowed-response-headers=www-authenticate kerberos
-  exec_vault write auth/kerberos/config keytab=@vault_svc.keytab.base64 service_account="vault_svc"
+  exec_vault write auth/kerberos/config keytab=@/tests/vault_svc.keytab.base64 service_account="vault_svc"
   exec_vault write auth/kerberos/config/ldap \
     binddn=${DOMAIN_VAULT_ACCOUNT}@${REALM_NAME} bindpass=${DOMAIN_VAULT_PASS} \
-    groupattr=sAMAccountName \groupdn="${DOMAIN_DN}" \
+    groupattr=sAMAccountName \
+    groupdn="${DOMAIN_DN}" \
     groupfilter="(&(objectClass=group)(member:1.2.840.113556.1.4.1941:={{.UserDN}}))" \
     insecure_tls=true starttls=true \
     userdn="CN=Users,${DOMAIN_DN}" userattr=sAMAccountName \
