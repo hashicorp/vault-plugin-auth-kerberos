@@ -8,7 +8,7 @@ else
   base64cmd="base64 -d"
 fi
 
-VAULT_VER="$(curl -fsSL 'https://api.github.com/repos/hashicorp/vault/tags?page=1' | jq -r '.[0].name')"
+VAULT_VER="$(curl -fsSL 'https://api.github.com/repos/hashicorp/vault/tags?page=1' | jq -r '.[0].name' | sed -e 's/^v//')"
 VAULT_PORT=8200
 SAMBA_VER=4.8.12
 
