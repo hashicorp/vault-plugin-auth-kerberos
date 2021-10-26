@@ -8,6 +8,7 @@ else
   base64cmd="base64 -d"
 fi
 
+REPO_ROOT="$(readlink -f $(git rev-parse --show-toplevel || echo .))"
 VAULT_VER="$(curl -fsSL 'https://api.github.com/repos/hashicorp/vault/tags?page=1' | jq -r '.[0].name' | sed -e 's/^v//')"
 VAULT_PORT=8200
 SAMBA_VER=4.8.12
@@ -24,7 +25,7 @@ DOMAIN_NAME=matrix
 DNS_NAME=matrix.lan
 REALM_NAME=MATRIX.LAN
 DOMAIN_DN=DC=MATRIX,DC=LAN
-TESTS_DIR=/tmp/vault_plugin_tests
+TESTS_DIR="$(mktemp -d -t tests-XXXXXXXX)"
 
 function start_infrastructure() {
   create_network
@@ -46,6 +47,11 @@ function stop_infrastructure() {
   delete_network
 }
 
+function tear_down() {
+  rm -rf "${TESTS_DIR}"
+  stop_infrastructure
+}
+
 function create_network() {
   docker network create ${DNS_NAME}
 }
@@ -56,12 +62,11 @@ function delete_network() {
 
 function start_vault() {
   VAULT_CONTAINER=$(docker run --net=${DNS_NAME} -d -ti --cap-add=IPC_LOCK \
-    -v "$(pwd)/pkg/linux_amd64:/plugins:Z" \
-    -v "${TESTS_DIR}/integration:/tests:Z" \
+    -v "${REPO_ROOT}:/tmp/repo-root:Z" \
     -e "VAULT_DEV_ROOT_TOKEN_ID=${VAULT_TOKEN}" \
     -e "VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:${VAULT_PORT}" \
     -p ${VAULT_PORT}:${VAULT_PORT} \
-    hashicorp/vault:${VAULT_VER} server -dev -dev-plugin-dir=/plugins)
+    hashicorp/vault:${VAULT_VER} server -dev -dev-plugin-dir=/tmp/repo-root/pkg/linux_amd64)
   export VAULT_ADDR=http://127.0.0.1:${VAULT_PORT}
 }
 
@@ -134,8 +139,6 @@ function create_keytab() {
 
   docker exec $SAMBA_CONTAINER \
     base64 ${username}.keytab > ${username}.keytab.base64
-  # make a copy of the keytab for access from docker containers
-  cp "${username}.keytab.base64" "${TESTS_DIR}/integration/."
 }
 
 function add_vault_spn() {
@@ -157,7 +160,7 @@ function enable_plugin() {
   VAULT_PLUGIN_SHA=$(openssl dgst -sha256 pkg/linux_amd64/vault-plugin-auth-kerberos|cut -d ' ' -f2)
   exec_vault write sys/plugins/catalog/auth/kerberos sha_256=${VAULT_PLUGIN_SHA} command="vault-plugin-auth-kerberos"
   exec_vault auth enable -passthrough-request-headers=Authorization -allowed-response-headers=www-authenticate kerberos
-  exec_vault write auth/kerberos/config keytab=@/tests/vault_svc.keytab.base64 service_account="vault_svc"
+  exec_vault write auth/kerberos/config keytab=@/tmp/repo-root/vault_svc.keytab.base64 service_account="vault_svc"
   exec_vault write auth/kerberos/config/ldap \
     binddn=${DOMAIN_VAULT_ACCOUNT}@${REALM_NAME} bindpass=${DOMAIN_VAULT_PASS} \
     groupattr=sAMAccountName \
@@ -172,6 +175,8 @@ function enable_plugin() {
 function write_python_test() {
   sleep 10 # this is a naive way to wait until the containers are up
   echo "
+import sys
+
 import kerberos
 import requests
 
@@ -183,7 +188,14 @@ kerberos_token = kerberos.authGSSClientResponse(vc)
 
 r = requests.post(\"http://{}/v1/auth/kerberos/login\".format(host),
                   headers={'Authorization': 'Negotiate ' + kerberos_token})
-print('Vault token through Python:', r.json()['auth']['client_token'])
+if r.status_code != 200:
+    sys.exit('Python test: Expected Vault login success, response={}'.format(r))
+
+token = r.json().get('auth', dict()).get('client_token')
+if token is None:
+    sys.exit('Python test: Expected client token, got {}'.format(token))
+
+print('Python test: Vault login succeeded, got token {}'.format(token))
 " > manual_test.py
 }
 
@@ -209,16 +221,13 @@ function write_kerb_config() {
 }
 
 function prepare_files() {
+  chmod 0755 "${TESTS_DIR}"
   mkdir -p ${TESTS_DIR}/integration
   pushd ${TESTS_DIR}/integration
   write_kerb_config
   write_python_test
   popd
   eval "$base64cmd" grace.keytab.base64 > $TESTS_DIR/integration/grace.keytab
-}
-
-function remove_files() {
-  rm -fr $TESTS_DIR/integration # using superfluous child dir in case variable is blank at some point ;)
 }
 
 function start_domain_joined_container() {
@@ -266,14 +275,13 @@ function run_test_script() {
 }
 
 function run_tests() {
-  remove_files
   prepare_files
   start_domain_joined_container
   run_test_script
 }
 
 function main() {
-  trap stop_infrastructure EXIT SIGINT
+  trap tear_down EXIT SIGINT
   start_infrastructure
 
   sleep 15  # could loop until `ldapsearch` returns properly....
@@ -293,6 +301,7 @@ function main() {
     echo "active directory go login failed"
     return $active_dir_login_result
   fi
+  echo "Tests completed successfully"
   return 0
 }
 main
