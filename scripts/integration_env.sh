@@ -124,7 +124,6 @@ function check_user() {
 }
 
 function create_keytab() {
-
   username="${1}"
   password="${2}"
 
