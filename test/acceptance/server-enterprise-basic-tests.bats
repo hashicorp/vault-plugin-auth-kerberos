@@ -4,6 +4,7 @@ load _helpers
 
 export VAULT_ADDR='http://127.0.0.1:8200'
 export VAULT_LICENSE=${VAULT_LICENSE?}
+export VAULT_NAMESPACE=${VAULT_NAMESPACE:-"admin/"}
 
 VAULT_PLUGIN_SHA=$(openssl dgst -sha256 pkg/linux_amd64/vault-plugin-auth-kerberos|cut -d ' ' -f2)
 
@@ -22,19 +23,20 @@ teardown() {
 }
 
 create_namespace() {
-  vault namespace create admin
+  new_namespace=${VAULT_NAMESPACE}
+  VAULT_NAMESPACE=""
+  vault namespace create "$new_namespace"
 }
 
 register_plugin() {
   plugin_binary_path="$(plugin_dir)/vault-plugin-auth-kerberos"
   VAULT_PLUGIN_SHA=$(openssl dgst -sha256 "$plugin_binary_path" | cut -d ' ' -f2)
+  VAULT_NAMESPACE=""
 
   vault write sys/plugins/catalog/auth/kerberos sha_256="${VAULT_PLUGIN_SHA}" command="vault-plugin-auth-kerberos"
 }
 
 enable_and_config_auth_kerberos() {
-  export VAULT_NAMESPACE=admin
-
   vault auth enable \
     -path=kerberos \
     -passthrough-request-headers=Authorization \
@@ -60,15 +62,18 @@ enable_and_config_auth_kerberos() {
 }
 
 login_kerberos() {
-  # docker exec -it "$DOMAIN_JOINED_CONTAINER" pip install kerberos
   docker cp "${BATS_TEST_DIRNAME}"/auth-check.py "$DOMAIN_JOINED_CONTAINER":/home
-  docker exec -it "$DOMAIN_JOINED_CONTAINER" python /home/auth-check.py "$VAULT_CONTAINER"
+  docker exec -it "$DOMAIN_JOINED_CONTAINER" python /home/auth-check.py "$VAULT_CONTAINER" "${VAULT_NAMESPACE}"
 }
 
 @test "auth/kerberos: setup and authentication within a Vault namespace" {
   create_namespace
   register_plugin
   enable_and_config_auth_kerberos
-  login_kerberos
+
+  run login_kerberos
+  [ "${status?}" -eq 0 ]
+
+  [[ "${output?}" =~ ^Vault[[:space:]]token\:[[:space:]].+$ ]]
 }
 
