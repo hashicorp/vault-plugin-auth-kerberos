@@ -2,11 +2,15 @@
 
 load _helpers
 
-export VAULT_ADDR='http://127.0.0.1:8200'
-export VAULT_LICENSE=${VAULT_LICENSE?}
+export VAULT_ADDR="http://127.0.0.1:8200"
 export VAULT_NAMESPACE=${VAULT_NAMESPACE:-"admin/"}
 
-VAULT_PLUGIN_SHA=$(openssl dgst -sha256 pkg/linux_amd64/vault-plugin-auth-kerberos|cut -d ' ' -f2)
+# todo: Whenever we add Vault OSS acceptance test,
+# we will have to make this conditional based on that
+if [[ -z "${VAULT_LICENSE}" ]]; then
+    echo "VAULT_LICENSE env var not set" >&2
+    exit 1
+fi
 
 # setup sets up the infrastructure required for running these tests
 setup() {
