@@ -13,7 +13,7 @@ if [[ -z "${VAULT_LICENSE}" ]]; then
 fi
 
 # setup sets up the infrastructure required for running these tests
-setup() {
+setup_file() {
   start_infrastructure
   sleep 15
 
@@ -22,7 +22,7 @@ setup() {
   prepare_outer_environment
 }
 
-teardown() {
+teardown_file() {
   stop_infrastructure
 }
 
@@ -70,14 +70,24 @@ login_kerberos() {
   docker exec -it "$DOMAIN_JOINED_CONTAINER" python /home/auth-check.py "$VAULT_CONTAINER" "${VAULT_NAMESPACE}"
 }
 
-@test "auth/kerberos: setup and authentication within a Vault namespace" {
-  create_namespace
-  register_plugin
-  enable_and_config_auth_kerberos
+@test "auth/kerberos: create namespace" {
+  run create_namespace
+  [ "${status?}" -eq 0 ]
+}
 
+@test "auth/kerberos: register plugin" {
+  run register_plugin
+  [ "${status?}" -eq 0 ]
+}
+
+@test "auth/kerberos: enable and configure auth method" {
+  run enable_and_config_auth_kerberos
+  [ "${status?}" -eq 0 ]
+}
+
+@test "auth/kerberos: setup and authentication within a Vault namespace" {
   run login_kerberos
   [ "${status?}" -eq 0 ]
 
   [[ "${output?}" =~ ^Vault[[:space:]]token\:[[:space:]].+$ ]]
 }
-

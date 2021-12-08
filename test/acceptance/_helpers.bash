@@ -1,8 +1,12 @@
+# vault-related env vars
 VAULT_VER=$(curl -s "https://api.github.com/repos/hashicorp/vault/tags?page=1" | jq -r '.[0].name[1:]')_ent
 VAULT_IMAGE=vault-enterprise
 VAULT_PORT=8200
-VAULT_LICENSE=${VAULT_LICENSE?}
 
+# Error if the following env vars are not set
+[ "${VAULT_LICENSE:?}" ]
+
+# kerberos-related env vars
 SAMBA_VER=4.8.12
 
 DOMAIN_ADMIN_PASS=Pa55word!
