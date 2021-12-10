@@ -187,8 +187,9 @@ You can also specify a `TESTARGS` variable to filter tests like so:
 $ make test TESTARGS='--run=TestConfig'
 ```
 
-Acceptance tests requires a Vault Enterprise license to be provided
-and the following tools to be installed:
+Acceptance tests requires a Vault Enterprise license to be 
+[provided](https://www.vaultproject.io/docs/commands#vault_license) through 
+`VAULT_LICENSE` and the following tools to be installed:
 - [Docker](https://docs.docker.com/get-docker/)
 - [jq](https://stedolan.github.io/jq/)
 - [bats](https://bats-core.readthedocs.io/en/stable)

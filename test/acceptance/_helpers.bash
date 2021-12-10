@@ -1,5 +1,5 @@
 # vault-related env vars
-VAULT_VER=$(curl -s "https://api.github.com/repos/hashicorp/vault/tags?page=1" | jq -r '.[0].name[1:]')_ent
+VAULT_VER=${VAULT_VER:=$(curl -s "https://api.github.com/repos/hashicorp/vault/tags?page=1" | jq -r '.[0].name[1:]')_ent}
 VAULT_IMAGE=vault-enterprise
 VAULT_PORT=8200
 
@@ -9,7 +9,7 @@ VAULT_PORT=8200
 # kerberos-related env vars
 SAMBA_VER=4.8.12
 
-DOMAIN_ADMIN_PASS=Pa55word!
+export DOMAIN_ADMIN_PASS=Pa55word!
 export DOMAIN_VAULT_ACCOUNT=vault_svc
 export DOMAIN_VAULT_PASS=vaultPa55word!
 export DOMAIN_USER_ACCOUNT=grace
@@ -35,9 +35,9 @@ else
 fi
 
 # plugin_dir returns the directory for the plugin
-plugin_dir() {
+plugin_dir() (
     cd "${BATS_TEST_DIRNAME}/../../pkg/linux_amd64/" || return; pwd
-}
+)
 
 function start_infrastructure() {
   create_network
@@ -78,17 +78,36 @@ stop_vault() {
 
 start_domain() {
   docker run \
-  --net="${DNS_NAME}" \
-  -d -ti --privileged \
-  -p 135:135 -p 137:137 -p 138:138 -p 139:139 \
-  -p 389:389 -p 445:445 -p 464:464 -p 636:636 \
-  -p 3268:3268 -p 3269:3269 \
-  -e "SAMBA_DC_ADMIN_PASSWD=${DOMAIN_ADMIN_PASS}" \
-  -e "KERBEROS_PASSWORD=${DOMAIN_ADMIN_PASS}" \
-  -e SAMBA_DC_DOMAIN="${DOMAIN_NAME}" \
-  -e SAMBA_DC_REALM="${REALM_NAME}" \
-  --name "${SAMBA_CONTAINER}" \
-  "bodsch/docker-samba4:${SAMBA_VER}"
+    --net="${DNS_NAME}" \
+    -d -ti --privileged \
+    -p 135:135 -p 137:137 -p 138:138 -p 139:139 \
+    -p 389:389 -p 445:445 -p 464:464 -p 636:636 \
+    -p 3268:3268 -p 3269:3269 \
+    -e "SAMBA_DC_ADMIN_PASSWD=${DOMAIN_ADMIN_PASS}" \
+    -e "KERBEROS_PASSWORD=${DOMAIN_ADMIN_PASS}" \
+    -e SAMBA_DC_DOMAIN="${DOMAIN_NAME}" \
+    -e SAMBA_DC_REALM="${REALM_NAME}" \
+    --name "${SAMBA_CONTAINER}" \
+    "bodsch/docker-samba4:${SAMBA_VER}"
+
+  echo "Waiting for samba container to become ready..."
+
+  # Minimal sleep for the container itself to come up
+  sleep 1
+
+  samba_readiness_check() {
+  docker exec "$SAMBA_CONTAINER" \
+    ldapsearch \
+    -H ldaps://localhost \
+    -D "Administrator@${REALM_NAME}" \
+    -w "${DOMAIN_ADMIN_PASS}" \
+    -b "${DOMAIN_DN}" '(objectClass=*)'
+  }
+  declare -fxr samba_readiness_check
+
+  timeout 20s bash -c 'until samba_readiness_check; do sleep 2; done'
+
+  echo "Samba container ready!"
 }
 
 stop_domain() {
@@ -189,13 +208,13 @@ function prepare_files() {
 
 function start_domain_joined_container() {
   docker run \
-  --net=${DNS_NAME} \
-  -d -t \
-  -v "${BATS_FILE_TMPDIR}/integration:/tests:Z" \
-  -e KRB5_CONFIG=/tests/krb5.conf \
-  -e KRB5_CLIENT_KTNAME=/tests/grace.keytab \
-  --name "${DOMAIN_JOINED_CONTAINER}" \
-  python:3.7 cat
+    --net=${DNS_NAME} \
+    -d -t \
+    -v "${BATS_FILE_TMPDIR}/integration:/tests:Z" \
+    -e KRB5_CONFIG=/tests/krb5.conf \
+    -e KRB5_CLIENT_KTNAME=/tests/grace.keytab \
+    --name "${DOMAIN_JOINED_CONTAINER}" \
+    python:3.7 cat
 }
 
 function stop_domain_joined_container() {

@@ -15,7 +15,6 @@ fi
 # setup sets up the infrastructure required for running these tests
 setup_file() {
   start_infrastructure
-  sleep 15
 
   setup_users
   add_vault_spn
