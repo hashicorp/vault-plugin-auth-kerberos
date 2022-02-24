@@ -1,5 +1,5 @@
 # vault-related env vars
-VAULT_VER=${VAULT_VER:=$(curl -s "https://api.github.com/repos/hashicorp/vault/tags?page=1" | jq -r '.[0].name[1:]')_ent}
+VAULT_IMAGE_TAG=${VAULT_IMAGE_TAG:=$(curl -s "https://api.github.com/repos/hashicorp/vault/tags?page=1" | jq -r '.[0].name[1:]')-ent}
 VAULT_IMAGE=vault-enterprise
 VAULT_PORT=8200
 
@@ -68,7 +68,7 @@ start_vault() {
     -e "VAULT_LICENSE=${VAULT_LICENSE}" \
     -p 8200:8200 \
     --name "${VAULT_CONTAINER}" \
-    "hashicorp/${VAULT_IMAGE}:${VAULT_VER/_/-}" server -dev -dev-plugin-dir="/plugins"
+    "hashicorp/${VAULT_IMAGE}:${VAULT_IMAGE_TAG}" server -dev -dev-plugin-dir="/plugins"
 }
 
 stop_vault() {
