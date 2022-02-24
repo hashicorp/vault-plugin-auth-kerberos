@@ -2,12 +2,6 @@
 
 set -eo pipefail
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  base64cmd="base64 -D"
-else
-  base64cmd="base64 -d"
-fi
-
 REPO_ROOT="$(readlink -f $(git rev-parse --show-toplevel || echo .))"
 VAULT_VER="$(curl -fsSL 'https://api.github.com/repos/hashicorp/vault/tags?page=1' | jq -r '.[0].name' | sed -e 's/^v//')"
 VAULT_PORT=8200
@@ -226,7 +220,7 @@ function prepare_files() {
   write_kerb_config
   write_python_test
   popd
-  eval "$base64cmd" grace.keytab.base64 > $TESTS_DIR/integration/grace.keytab
+  eval base64 -d grace.keytab.base64 > $TESTS_DIR/integration/grace.keytab
 }
 
 function start_domain_joined_container() {

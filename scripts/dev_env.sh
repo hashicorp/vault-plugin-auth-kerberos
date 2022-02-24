@@ -1,10 +1,8 @@
 #!/bin/bash
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  base64cmd="base64 -D"
   sleepcmd="while true; do sleep 86400; done"
 else
-  base64cmd="base64 -d"
   sleepcmd="sleep infinity"
 fi
 
@@ -105,7 +103,7 @@ function check_user() {
 }
 
 function create_keytab() {
-  
+
   username="${1}"
   password="${2}"
 
@@ -159,7 +157,7 @@ function prepare_files() {
   pushd ${TESTS_DIR}/integration
   write_kerb_config
   # base64 -d $WD/grace.keytab.base64 > $TESTS_DIR/integration/grace.keytab
-  eval "$base64cmd" $WD/grace.keytab.base64 > $TESTS_DIR/integration/grace.keytab
+  eval base64 -d $WD/grace.keytab.base64 > $TESTS_DIR/integration/grace.keytab
 }
 
 function remove_files() {
