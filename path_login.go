@@ -108,6 +108,10 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 		return b.pathLoginGet(ctx, req, d)
 	}
 
+	if kerbCfg.RemoveInstanceName {
+		removeInstanceNameFromKeytab(kt)
+	}
+
 	// The SPNEGOKRB5Authenticate method only calls an inner function if it's
 	// successful. Let's use it to record success, and to retrieve the caller's
 	// identity.
@@ -130,6 +134,10 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 		}
 		b.Logger().Debug(fmt.Sprintf("identity: %+v", identity))
 		username = identity.UserName()
+
+		if kerbCfg.RemoveInstanceName {
+			username = trimUsername(identity.UserName())
+		}
 
 		// Verify that the realm on the LDAP config (if set) is the same as the identity's
 		// realm. The UPNDomain denotes the realm on the LDAP config, and the identity
@@ -203,18 +211,18 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 		return nil, fmt.Errorf("LDAP bind failed: %v", err)
 	}
 
-	userBindDN, err := ldapClient.GetUserBindDN(ldapCfg.ConfigEntry, ldapConnection, identity.UserName())
+	userBindDN, err := ldapClient.GetUserBindDN(ldapCfg.ConfigEntry, ldapConnection, username)
 	if err != nil {
 		return nil, errwrap.Wrapf("unable to get user binddn: {{err}}", err)
 	}
-	b.Logger().Debug("auth/ldap: User BindDN fetched", "username", identity.UserName(), "binddn", userBindDN)
+	b.Logger().Debug("auth/ldap: User BindDN fetched", "username", username, "binddn", userBindDN)
 
 	userDN, err := ldapClient.GetUserDN(ldapCfg.ConfigEntry, ldapConnection, userBindDN, username)
 	if err != nil {
 		return nil, errwrap.Wrapf("unable to get user dn: {{err}}", err)
 	}
 
-	ldapGroups, err := ldapClient.GetLdapGroups(ldapCfg.ConfigEntry, ldapConnection, userDN, identity.UserName())
+	ldapGroups, err := ldapClient.GetLdapGroups(ldapCfg.ConfigEntry, ldapConnection, userDN, username)
 	if err != nil {
 		return nil, errwrap.Wrapf("unable to get ldap groups: {{err}}", err)
 	}

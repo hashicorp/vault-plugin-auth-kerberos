@@ -166,7 +166,7 @@ func GetAuthHeaderVal(loginCfg *LoginCfg) (string, error) {
 	}
 
 	if loginCfg.RemoveInstanceName {
-		removeInstanceName(kt)
+		removeInstanceNameFromKeytab(kt)
 	}
 
 	krb5Conf, err := config.Load(loginCfg.Krb5ConfPath)
@@ -191,10 +191,12 @@ func GetAuthHeaderVal(loginCfg *LoginCfg) (string, error) {
 	if err := spnegoClient.AcquireCred(); err != nil {
 		return "", errwrap.Wrapf("couldn't acquire client credential: {{err}}", err)
 	}
+
 	spnegoToken, err := spnegoClient.InitSecContext()
 	if err != nil {
 		return "", errwrap.Wrapf("couldn't initialize context: {{err}}", err)
 	}
+
 	marshalledToken, err := spnegoToken.Marshal()
 	if err != nil {
 		return "", errwrap.Wrapf("couldn't marshal SPNEGO: {{err}}", err)
@@ -203,14 +205,21 @@ func GetAuthHeaderVal(loginCfg *LoginCfg) (string, error) {
 	return authHeaderVal, nil
 }
 
-func removeInstanceName(kt *keytab.Keytab) {
+func removeInstanceNameFromKeytab(kt *keytab.Keytab) {
 	for index, entry := range kt.Entries {
 		if strings.Contains(entry.Principal.String(), "/") {
-			userSplit := strings.Split(kt.Entries[index].Principal.String(), "/")
-			if len(userSplit) > 1 {
-				kt.Entries[index].Principal.Components = []string{userSplit[0]}
-				kt.Entries[index].Principal.NumComponents = int16(len(kt.Entries[index].Principal.Components))
-			}
+			trimmed := trimUsername(entry.Principal.String())
+			kt.Entries[index].Principal.Components = []string{trimmed}
+			kt.Entries[index].Principal.NumComponents = int16(1)
+
 		}
 	}
+}
+
+func trimUsername(user string) string {
+	if strings.Contains(user, "/") {
+		split := strings.Split(user, "/")
+		user = split[0]
+	}
+	return user
 }
