@@ -206,13 +206,11 @@ func GetAuthHeaderVal(loginCfg *LoginCfg) (string, error) {
 }
 
 func removeInstanceName(kt *keytab.Keytab) {
-	for index, entry := range kt.Entries {
-		if strings.Contains(entry.Principal.String(), "/") {
-			userSplit := strings.Split(kt.Entries[index].Principal.String(), "/")
-			if len(userSplit) > 1 {
-				kt.Entries[index].Principal.Components = []string{userSplit[0]}
-				kt.Entries[index].Principal.NumComponents = int16(len(kt.Entries[index].Principal.Components))
-			}
+	for index := range kt.Entries {
+		userSplit := strings.Split(kt.Entries[index].Principal.String(), "/")
+		if len(userSplit) > 1 {
+			kt.Entries[index].Principal.Components = []string{userSplit[0]}
+			kt.Entries[index].Principal.NumComponents = int16(len(kt.Entries[index].Principal.Components))
 		}
 	}
 }
