@@ -166,7 +166,7 @@ func GetAuthHeaderVal(loginCfg *LoginCfg) (string, error) {
 	}
 
 	if loginCfg.RemoveInstanceName {
-		removeInstanceName(kt)
+		removeInstanceNameFromKeytab(kt)
 	}
 
 	krb5Conf, err := config.Load(loginCfg.Krb5ConfPath)
@@ -205,12 +205,16 @@ func GetAuthHeaderVal(loginCfg *LoginCfg) (string, error) {
 	return authHeaderVal, nil
 }
 
-func removeInstanceName(kt *keytab.Keytab) {
+func removeInstanceNameFromKeytab(kt *keytab.Keytab) {
 	for index := range kt.Entries {
-		userSplit := strings.Split(kt.Entries[index].Principal.String(), "/")
-		if len(userSplit) > 1 {
-			kt.Entries[index].Principal.Components = []string{userSplit[0]}
+		user := splitUsername(kt.Entries[index].Principal.String())
+		if len(user) > 1 {
+			kt.Entries[index].Principal.Components = []string{user[0]}
 			kt.Entries[index].Principal.NumComponents = int16(len(kt.Entries[index].Principal.Components))
 		}
 	}
+}
+
+func splitUsername(username string) []string {
+	return strings.Split(username, "/")
 }

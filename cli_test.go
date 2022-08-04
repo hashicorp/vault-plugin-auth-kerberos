@@ -27,7 +27,7 @@ func TestCLI_RemoveInstanceName(t *testing.T) {
 			t.Fatalf("got error adding entry, shouldn't have: %v", err)
 		}
 
-		removeInstanceName(&kt)
+		removeInstanceNameFromKeytab(&kt)
 		if kt.Entries[0].Principal.NumComponents != 1 {
 			t.Fatalf("expected num components to be 1, got %d", kt.Entries[0].Principal.NumComponents)
 		}
