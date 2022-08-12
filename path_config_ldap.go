@@ -12,10 +12,11 @@ import (
 const ldapConfPath = "config/ldap"
 
 func (b *backend) pathConfigLdap() *framework.Path {
+	fields := ldaputil.ConfigFields()
+
 	p := &framework.Path{
 		Pattern: ldapConfPath,
-		Fields:  ldaputil.ConfigFields(),
-
+		Fields:  fields,
 		Operations: map[logical.Operation]framework.OperationHandler{
 			logical.ReadOperation: &framework.PathOperation{
 				Callback: b.pathConfigLdapRead,
@@ -24,7 +25,6 @@ func (b *backend) pathConfigLdap() *framework.Path {
 				Callback: b.pathConfigLdapWrite,
 			},
 		},
-
 		HelpSynopsis:    pathConfigLdapHelpSyn,
 		HelpDescription: pathConfigLdapHelpDesc,
 	}

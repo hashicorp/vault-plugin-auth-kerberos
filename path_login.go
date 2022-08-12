@@ -265,13 +265,15 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 	}
 
 	// Add the LDAP groups so the Identity system can use them
-	for _, groupName := range allGroups {
-		if groupName == "" {
-			continue
+	if kerbCfg.AddLDAPGroupsToEntity {
+		for _, groupName := range allGroups {
+			if groupName == "" {
+				continue
+			}
+			auth.GroupAliases = append(auth.GroupAliases, &logical.Alias{
+				Name: groupName,
+			})
 		}
-		auth.GroupAliases = append(auth.GroupAliases, &logical.Alias{
-			Name: groupName,
-		})
 	}
 
 	return &logical.Response{
