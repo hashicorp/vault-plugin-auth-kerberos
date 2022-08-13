@@ -57,17 +57,17 @@ func main() {
 		fmt.Println(`"username" is required`)
 		os.Exit(1)
 	}
-	if service == "" {
-		fmt.Println(`"service" is required`)
-		os.Exit(1)
-	}
-	if realm == "" {
-		fmt.Println(`"realm" is required`)
-		os.Exit(1)
-	}
 	if keytabPath == "" {
-		fmt.Println(`"keytab_path" is required`)
-		os.Exit(1)
+		fmt.Println(`"keytab_path" not specified, defaulting to ticket cache`)
+	} else {
+		if service == "" {
+			fmt.Println(`"service" is required`)
+			os.Exit(1)
+		}
+		if realm == "" {
+			fmt.Println(`"realm" is required`)
+			os.Exit(1)
+		}
 	}
 	if krb5ConfPath == "" {
 		fmt.Println(`"krb5conf_path" is required`)

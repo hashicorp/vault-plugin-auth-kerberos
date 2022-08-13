@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/vault/api"
 	"github.com/jcmturner/gokrb5/v8/client"
 	"github.com/jcmturner/gokrb5/v8/config"
+	"github.com/jcmturner/gokrb5/v8/credentials"
 	"github.com/jcmturner/gokrb5/v8/keytab"
 	"github.com/jcmturner/gokrb5/v8/spnego"
 )
@@ -24,21 +26,20 @@ func (h *CLIHandler) Auth(c *api.Client, m map[string]string) (*api.Secret, erro
 	if !ok {
 		mount = "kerberos"
 	}
-	username := m["username"]
-	if username == "" {
-		return nil, errors.New(`"username" is required`)
-	}
 	service := m["service"]
 	if service == "" {
 		return nil, errors.New(`"service" is required`)
 	}
 	realm := m["realm"]
-	if realm == "" {
-		return nil, errors.New(`"realm" is required`)
-	}
+	username := m["username"]
 	keytabPath := m["keytab_path"]
-	if keytabPath == "" {
-		return nil, errors.New(`"keytab_path" is required`)
+	if keytabPath != "" {
+		if username == "" {
+			return nil, errors.New(`"username" is required`)
+		}
+		if realm == "" {
+			return nil, errors.New(`"realm" is required`)
+		}
 	}
 
 	krb5ConfPath := m["krb5conf_path"]
@@ -156,19 +157,38 @@ type LoginCfg struct {
 	RemoveInstanceName bool
 }
 
+// FindCCache tries to find the kerberos ticket cache
+func FindCCache() (string, error) {
+	env := os.Getenv("KRB5CCNAME")
+	if env != "" {
+		if strings.HasPrefix(env, "FILE:") {
+			return strings.Replace(env, "FILE:", "", 1), nil
+		}
+		return env, errors.New("invalid cache location (only FILE:/ supported)")
+	}
+
+	// The second step would be to look at the kerberos config, however libgokrb5 doesn't implement this particular
+	// setting. Instead, we then default to "the default"
+	return fmt.Sprintf("/tmp/krb5cc_%d", os.Getuid()), nil
+}
+
+// GetCCache makes sure we can read the ticket cache, if there is any
+func GetCCache() (string, error) {
+	val, err := FindCCache()
+	if err != nil {
+		return val, err
+	}
+	_, err = os.Stat(val)
+	if err != nil {
+		return "", errwrap.Wrapf("couldn't read ticket cache: {{err}}", err)
+	}
+	return val, nil
+}
+
 // GetAuthHeaderVal is a convenience function that takes a given loginCfg
 // and returns the value for the "Authorization" header that should be
 // provided to Vault for a successful SPNEGO login.
 func GetAuthHeaderVal(loginCfg *LoginCfg) (string, error) {
-	kt, err := keytab.Load(loginCfg.KeytabPath)
-	if err != nil {
-		return "", errwrap.Wrapf("couldn't load keytab: {{err}}", err)
-	}
-
-	if loginCfg.RemoveInstanceName {
-		removeInstanceNameFromKeytab(kt)
-	}
-
 	krb5Conf, err := config.Load(loginCfg.Krb5ConfPath)
 	if err != nil {
 		return "", errwrap.Wrapf("couldn't parse krb5Conf: {{err}}", err)
@@ -181,7 +201,33 @@ func GetAuthHeaderVal(loginCfg *LoginCfg) (string, error) {
 		settings = append(settings, client.DisablePAFXFAST(true))
 	}
 
-	cl := client.NewWithKeytab(loginCfg.Username, loginCfg.Realm, kt, krb5Conf, settings...)
+	var cl *client.Client
+	if loginCfg.KeytabPath != "" {
+		kt, err := keytab.Load(loginCfg.KeytabPath)
+		if err != nil {
+			return "", errwrap.Wrapf("couldn't load keytab: {{err}}", err)
+		}
+
+		if loginCfg.RemoveInstanceName {
+			removeInstanceNameFromKeytab(kt)
+		}
+
+		cl = client.NewWithKeytab(loginCfg.Username, loginCfg.Realm, kt, krb5Conf, settings...)
+	} else {
+		loc, err := GetCCache()
+		if err != nil {
+			return "", errwrap.Wrapf("couldn't find ticket cache: {{err}}", err)
+		}
+		ccache, err := credentials.LoadCCache(loc)
+		if err != nil {
+			return "", errwrap.Wrapf("couldn't load ticket cache: {{err}}", err)
+		}
+		cl, err = client.NewFromCCache(ccache, krb5Conf, settings...)
+		if err != nil {
+			return "", errwrap.Wrapf("couldn't create KRB client: {{err}}", err)
+		}
+	}
+
 	if err := cl.Login(); err != nil {
 		return "", errwrap.Wrapf("couldn't log in: {{err}}", err)
 	}
