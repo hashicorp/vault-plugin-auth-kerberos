@@ -10,10 +10,10 @@ import (
 
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-secure-stdlib/strutil"
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/helper/cidrutil"
 	"github.com/hashicorp/vault/sdk/helper/ldaputil"
-	"github.com/hashicorp/vault/sdk/helper/strutil"
 	"github.com/hashicorp/vault/sdk/logical"
 	"github.com/jcmturner/gokrb5/v8/keytab"
 	"github.com/jcmturner/gokrb5/v8/service"
@@ -103,6 +103,10 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 		return nil, errwrap.Wrapf("could not parse keytab: {{err}}", err)
 	}
 
+	if kerbCfg.RemoveInstanceName {
+		removeInstanceNameFromKeytab(kt)
+	}
+
 	s := strings.SplitN(authorizationString, " ", 2)
 	if len(s) != 2 || s[0] != "Negotiate" {
 		return b.pathLoginGet(ctx, req, d)
@@ -130,6 +134,13 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 		}
 		b.Logger().Debug(fmt.Sprintf("identity: %+v", identity))
 		username = identity.UserName()
+
+		if kerbCfg.RemoveInstanceName {
+			user := splitUsername(identity.UserName())
+			if len(user) > 1 {
+				username = user[0]
+			}
+		}
 
 		// Verify that the realm on the LDAP config (if set) is the same as the identity's
 		// realm. The UPNDomain denotes the realm on the LDAP config, and the identity
@@ -203,7 +214,7 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 		return nil, fmt.Errorf("LDAP bind failed: %v", err)
 	}
 
-	userBindDN, err := ldapClient.GetUserBindDN(ldapCfg.ConfigEntry, ldapConnection, identity.UserName())
+	userBindDN, err := ldapClient.GetUserBindDN(ldapCfg.ConfigEntry, ldapConnection, username)
 	if err != nil {
 		return nil, errwrap.Wrapf("unable to get user binddn: {{err}}", err)
 	}
@@ -214,7 +225,7 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 		return nil, errwrap.Wrapf("unable to get user dn: {{err}}", err)
 	}
 
-	ldapGroups, err := ldapClient.GetLdapGroups(ldapCfg.ConfigEntry, ldapConnection, userDN, identity.UserName())
+	ldapGroups, err := ldapClient.GetLdapGroups(ldapCfg.ConfigEntry, ldapConnection, userDN, username)
 	if err != nil {
 		return nil, errwrap.Wrapf("unable to get ldap groups: {{err}}", err)
 	}
@@ -238,6 +249,7 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 		}
 		policies = append(policies, group.Policies...)
 	}
+
 	// Policies from each group may overlap
 	policies = strutil.RemoveDuplicates(policies, true)
 	auth := &logical.Auth{
@@ -265,7 +277,7 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 	}
 
 	// Add the LDAP groups so the Identity system can use them
-	if kerbCfg.AddLDAPGroupsToEntity {
+	if kerbCfg.AddLDAPGroupsToGroupAlias {
 		for _, groupName := range allGroups {
 			if groupName == "" {
 				continue
