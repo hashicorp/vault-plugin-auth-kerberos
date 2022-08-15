@@ -65,9 +65,9 @@ func (b *backend) pathConfigRead(ctx context.Context, req *logical.Request, data
 		return &logical.Response{
 			Data: map[string]interface{}{
 				// keytab is intentionally not returned here because it's sensitive
-				"service_account":           config.ServiceAccount,
-				"add_ldap_groups_to_entity": config.AddLDAPGroupsToGroupAlias,
-				"remove_instance_name":      config.RemoveInstanceName,
+				"service_account":                config.ServiceAccount,
+				"add_ldap_groups_to_group_alias": config.AddLDAPGroupsToGroupAlias,
+				"remove_instance_name":           config.RemoveInstanceName,
 			},
 		}, nil
 	}
@@ -84,7 +84,7 @@ func (b *backend) pathConfigWrite(ctx context.Context, req *logical.Request, dat
 		return logical.ErrorResponse("data does not contain keytab"), logical.ErrInvalidRequest
 	}
 
-	addLdapGroups := data.Get("add_ldap_groups_to_entity").(bool)
+	addLdapGroups := data.Get("add_ldap_groups_to_group_alias").(bool)
 	removeInstanceName := data.Get("remove_instance_name").(bool)
 
 	// Check that the keytab is valid by parsing with krb5go
