@@ -8,10 +8,10 @@ import (
 )
 
 type kerberosConfig struct {
-	Keytab                    string `json:"keytab"`
-	ServiceAccount            string `json:"service_account"`
-	AddLDAPGroupsToGroupAlias bool   `json:"add_ldap_groups_to_group_alias"`
-	RemoveInstanceName        bool   `json:"remove_instance_name"`
+	Keytab             string `json:"keytab"`
+	ServiceAccount     string `json:"service_account"`
+	AddGroupAliases    bool   `json:"add_group_aliases"`
+	RemoveInstanceName bool   `json:"remove_instance_name"`
 }
 
 func (b *backend) pathConfig() *framework.Path {
@@ -29,7 +29,7 @@ func (b *backend) pathConfig() *framework.Path {
 				Type:        framework.TypeString,
 				Description: `Service Account`,
 			},
-			"add_ldap_groups_to_group_alias": {
+			"add_group_aliases": {
 				Type: framework.TypeBool,
 				Description: `If set to true, returns any groups found in LDAP as 
 				a group alias.`,
@@ -65,9 +65,9 @@ func (b *backend) pathConfigRead(ctx context.Context, req *logical.Request, data
 		return &logical.Response{
 			Data: map[string]interface{}{
 				// keytab is intentionally not returned here because it's sensitive
-				"service_account":                config.ServiceAccount,
-				"add_ldap_groups_to_group_alias": config.AddLDAPGroupsToGroupAlias,
-				"remove_instance_name":           config.RemoveInstanceName,
+				"service_account":      config.ServiceAccount,
+				"add_group_aliases":    config.AddGroupAliases,
+				"remove_instance_name": config.RemoveInstanceName,
 			},
 		}, nil
 	}
@@ -84,7 +84,7 @@ func (b *backend) pathConfigWrite(ctx context.Context, req *logical.Request, dat
 		return logical.ErrorResponse("data does not contain keytab"), logical.ErrInvalidRequest
 	}
 
-	addLdapGroups := data.Get("add_ldap_groups_to_group_alias").(bool)
+	addGroupAliases := data.Get("add_group_aliases").(bool)
 	removeInstanceName := data.Get("remove_instance_name").(bool)
 
 	// Check that the keytab is valid by parsing with krb5go
@@ -93,10 +93,10 @@ func (b *backend) pathConfigWrite(ctx context.Context, req *logical.Request, dat
 	}
 
 	config := &kerberosConfig{
-		Keytab:                    kt,
-		ServiceAccount:            serviceAccount,
-		AddLDAPGroupsToGroupAlias: addLdapGroups,
-		RemoveInstanceName:        removeInstanceName,
+		Keytab:             kt,
+		ServiceAccount:     serviceAccount,
+		AddGroupAliases:    addGroupAliases,
+		RemoveInstanceName: removeInstanceName,
 	}
 
 	entry, err := logical.StorageEntryJSON("config", config)

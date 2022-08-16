@@ -35,10 +35,10 @@ func TestConfig_ReadWrite(t *testing.T) {
 	b, storage := getTestBackend(t)
 
 	data := map[string]interface{}{
-		"keytab":                         testValidKeytab,
-		"service_account":                "testuser",
-		"remove_instance_name":           true,
-		"add_ldap_groups_to_group_alias": true,
+		"keytab":               testValidKeytab,
+		"service_account":      "testuser",
+		"remove_instance_name": true,
+		"add_group_aliases":    true,
 	}
 
 	req := &logical.Request{
