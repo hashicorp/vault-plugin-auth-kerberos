@@ -15,5 +15,7 @@ jobs:
       with:
         go-version-file: .go-version
         cache: true
+    - name: Run dev linux build
+      run: make dev-linux-only
     - name: Integration Tests
       run: ./scripts/integration_env.sh
