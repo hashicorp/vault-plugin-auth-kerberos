@@ -5,10 +5,5 @@ on:
 
 jobs:
   run-tests:
-    runs-on: ubuntu-latest
-    steps:
     # using `main` as the ref will keep your workflow up-to-date
-    - uses: hashicorp/vault-workflows-common/.github/workflows/tests.yaml@main
-
-    - name: Integration Tests
-      run: ./scripts/integration_env.sh
+    uses: hashicorp/vault-workflows-common/.github/workflows/tests.yaml@main
