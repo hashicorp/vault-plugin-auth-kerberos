@@ -1,7 +1,7 @@
 name: Run Integration Tests
 on:
   push:
-  workflow_dispact:
+  workflow_dispatch:
 
 permissions:
   contents: read
