@@ -14,6 +14,5 @@ jobs:
       with:
         go-version-file: .go-version
         cache: true
-    steps:
     - name: Integration Tests
       run: ./scripts/integration_env.sh
