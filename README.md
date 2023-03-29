@@ -44,9 +44,9 @@ plugin_directory = "path/to/plugin/directory"
 $ SHA256=$(shasum -a 256 'vault-plugin-auth-kerberos' | cut -d ' ' -f2)
 $ vault plugin register \
         -sha256=$SHA256 \
-        -command="vault-plugin-auth-azure" \
+        -command="vault-plugin-auth-kerberos" \
         -client-cert server.crt -client-key server.key \
-        auth vault-plugin-auth-kerberos
+        auth kerberos
 ```
 
 2. Enable the Kerberos auth method:
