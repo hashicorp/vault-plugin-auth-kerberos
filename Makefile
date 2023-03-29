@@ -21,7 +21,7 @@ dev: fmtcheck generate
 dev-linux-only: fmtcheck generate
 	@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 BUILD_TAGS='$(BUILD_TAGS)' VAULT_DEVENV_BUILD=1 sh -c "'$(CURDIR)/scripts/build.sh'"
 	@mkdir -p pkg/linux_amd64; cp bin/$(TOOL) pkg/linux_amd64/
-	GOOS=linux GOARCH=amd64 go build -o bin/login-kerb ./cmd/login-kerb
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/login-kerb ./cmd/login-kerb
 dev-dynamic: generate
 	@CGO_ENABLED=1 BUILD_TAGS='$(BUILD_TAGS)' VAULT_DEV_BUILD=1 sh -c "'$(CURDIR)/scripts/build.sh'"
 
