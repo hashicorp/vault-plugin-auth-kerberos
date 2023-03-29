@@ -2,6 +2,9 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+echo ""
+echo "Building for $GOOS $GOARCH"
+echo
 
 TOOL=vault-plugin-auth-kerberos
 #

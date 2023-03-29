@@ -172,7 +172,7 @@ r = requests.post("http://{}/v1/auth/kerberos/login".format(host),
 print('Vault token:', r.json()['auth']['client_token'])
 ```
 
-#### Tests
+### Tests
 
 If you are developing this plugin and want to verify it is still
 functioning (and you haven't broken anything else), we recommend
@@ -190,6 +190,8 @@ You can also specify a `TESTARGS` variable to filter tests like so:
 $ make test TESTARGS='--run=TestConfig'
 ```
 
+### Acceptance Tests
+
 Acceptance tests requires a Vault Enterprise license to be 
 [provided](https://developer.hashicorp.com/vault/docs/commands#vault_license) through 
 `VAULT_LICENSE` and the following tools to be installed:
@@ -198,9 +200,12 @@ Acceptance tests requires a Vault Enterprise license to be
 - [bats](https://bats-core.readthedocs.io/en/stable)
 
 
+Run the acceptance tests:
+
 ```sh
 $ make test-acceptance VAULT_LICENSE=<vault-license>
 ```
+
 
 ## Contributors
 
