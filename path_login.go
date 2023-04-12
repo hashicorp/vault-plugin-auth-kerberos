@@ -40,13 +40,13 @@ func (b *backend) pathLogin() *framework.Path {
 			logical.ReadOperation: &framework.PathOperation{
 				Callback: b.pathLoginGet,
 				DisplayAttrs: &framework.DisplayAttributes{
-					OperationVerb: "log-in2",
+					OperationVerb: "login2",
 				},
 			},
 			logical.UpdateOperation: &framework.PathOperation{
 				Callback: b.pathLoginUpdate,
 				DisplayAttrs: &framework.DisplayAttributes{
-					OperationVerb: "log-in",
+					OperationVerb: "login",
 				},
 			},
 		},
