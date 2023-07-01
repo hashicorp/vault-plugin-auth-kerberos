@@ -5,7 +5,7 @@ go 1.12
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/frankban/quicktest v1.13.0 // indirect
-	github.com/go-ldap/ldap/v3 v3.4.4
+	github.com/go-ldap/ldap/v3 v3.4.5
 	github.com/hashicorp/errwrap v1.1.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-hclog v1.5.0
