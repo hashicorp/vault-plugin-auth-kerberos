@@ -14,6 +14,6 @@ require (
 	github.com/jcmturner/gokrb5/v8 v8.4.4
 	github.com/lib/pq v1.2.0 // indirect
 	github.com/ory/dockertest/v3 v3.10.0
-	golang.org/x/crypto v0.7.0 // indirect
+	golang.org/x/crypto v0.17.0 // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0
 )
