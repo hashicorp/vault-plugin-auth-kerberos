@@ -14,5 +14,6 @@ require (
 	github.com/hashicorp/vault/sdk v0.10.2
 	github.com/jcmturner/gokrb5/v8 v8.4.4
 	github.com/ory/dockertest/v3 v3.10.0
+	google.golang.org/grpc v1.61.0 // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0
 )
