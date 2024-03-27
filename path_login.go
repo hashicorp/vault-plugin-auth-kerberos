@@ -252,11 +252,11 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 	for _, groupName := range allGroups {
 		group, err := b.Group(ctx, req.Storage, groupName)
 		if err != nil {
-			b.Logger().Warn(fmt.Sprintf("unable to retrieve %s: %s", groupName, err.Error()))
+			b.Logger().Debug(fmt.Sprintf("unable to retrieve %s: %s", groupName, err.Error()))
 			continue
 		}
 		if group == nil {
-			b.Logger().Warn(fmt.Sprintf("unable to find %s, does not currently exist", groupName))
+			b.Logger().Debug(fmt.Sprintf("unable to find %s, does not currently exist", groupName))
 			continue
 		}
 		policies = append(policies, group.Policies...)
