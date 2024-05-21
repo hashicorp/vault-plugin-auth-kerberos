@@ -7,9 +7,10 @@ import (
 	"os"
 
 	"github.com/hashicorp/go-hclog"
-	kerberosauth "github.com/hashicorp/vault-plugin-auth-kerberos"
 	"github.com/hashicorp/vault/api"
 	"github.com/hashicorp/vault/sdk/plugin"
+
+	kerberosauth "github.com/hashicorp/vault-plugin-auth-kerberos"
 )
 
 func main() {
