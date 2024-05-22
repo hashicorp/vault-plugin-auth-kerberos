@@ -1,4 +1,13 @@
-## Unreleased
+## v0.12.0
+### May 21, 2024
+
+### IMPROVEMENTS
+* update dependencies
+
+* `github.com/go-ldap/ldap/v3` v3.4.4 -> v3.4.8
+* `github.com/hashicorp/go-hclog` v1.6.2 -> v1.6.3
+* `github.com/hashicorp/vault/api` v1.11.0 -> v1.13.0
+* `github.com/hashicorp/vault/sdk` v0.10.2 -> v0.12.0
 
 ## v0.11.0
 
