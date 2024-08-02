@@ -1,3 +1,10 @@
+## Unreleased
+
+### IMPROVEMENTS
+* update dependencies
+  * `github.com/hashicorp/vault/api` v1.13.0 -> v1.14.0
+  * `github.com/hashicorp/vault/sdk` v0.12.0 -> v0.13.0
+
 ## v0.12.0
 ### May 21, 2024
 
