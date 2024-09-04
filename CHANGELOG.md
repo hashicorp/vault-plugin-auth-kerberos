@@ -6,6 +6,8 @@
 ### IMPROVEMENTS
 * Bump Go version to 1.22.6
 * update dependencies
+  * `github.com/docker/docker v25.0.5+incompatible` -> v25.0.6+incompatible
+  * `github.com/hashicorp/go-retryablehttp v0.7.6` -> v0.7.7
   * `github.com/hashicorp/vault/api` v1.13.0 -> v1.14.0
   * `github.com/hashicorp/vault/sdk` v0.12.0 -> v0.13.0
 
