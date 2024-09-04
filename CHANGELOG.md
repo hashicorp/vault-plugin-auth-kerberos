@@ -1,6 +1,10 @@
 ## Unreleased
 
+## v0.13.0
+### September 3, 2024
+
 ### IMPROVEMENTS
+* Bump Go version to 1.22.6
 * update dependencies
   * `github.com/hashicorp/vault/api` v1.13.0 -> v1.14.0
   * `github.com/hashicorp/vault/sdk` v0.12.0 -> v0.13.0
