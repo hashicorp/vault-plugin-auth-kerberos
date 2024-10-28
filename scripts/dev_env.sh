@@ -2,6 +2,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+set -e
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
   sleepcmd="while true; do sleep 86400; done"
@@ -9,7 +10,7 @@ else
   sleepcmd="sleep infinity"
 fi
 
-VAULT_IMAGE_TAG=$(curl https://api.github.com/repos/hashicorp/vault/tags?page=1 | python -c "import sys, json; print(json.load(sys.stdin)[0]['name'][1:])")
+VAULT_IMAGE_TAG=$(curl https://api.github.com/repos/hashicorp/vault/tags?page=1 | python3 -c "import sys, json; print(json.load(sys.stdin)[0]['name'][1:])")
 VAULT_PORT=8200
 VAULT_TOKEN=root
 SAMBA_VER=4.8.12
@@ -35,6 +36,12 @@ function start_infrastructure() {
 }
 
 function stop_infrastructure() {
+  local lineno
+  lineno="$1"
+  if [[ -z "$lineno" ]]; then
+    echo "[ERROR] in $(basename "$0") LINE: $lineno"
+  fi
+
   echo 'Stopping Docker containers and removing network, please wait...'
   stop_domain_joined_container
   stop_vault
@@ -53,7 +60,7 @@ function delete_network() {
 }
 
 function start_vault() {
-  VAULT_CONTAINER=$(docker run --net=${DNS_NAME} -d -ti --cap-add=IPC_LOCK -v $(pwd)/pkg/linux_amd64:/plugins:Z -e "VAULT_DEV_ROOT_TOKEN_ID=${VAULT_TOKEN}" -e "VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:${VAULT_PORT}" -p ${VAULT_PORT}:${VAULT_PORT} vault:${VAULT_IMAGE_TAG} server -dev -dev-plugin-dir=/plugins)
+  VAULT_CONTAINER=$(docker run --net=${DNS_NAME} -d -ti --cap-add=IPC_LOCK -v $(pwd)/pkg/linux_amd64:/plugins:Z -e "VAULT_DEV_ROOT_TOKEN_ID=${VAULT_TOKEN}" -e "VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:${VAULT_PORT}" -p ${VAULT_PORT}:${VAULT_PORT} hashicorp/vault:${VAULT_IMAGE_TAG} server -dev -dev-plugin-dir=/plugins)
   export VAULT_ADDR=http://127.0.0.1:${VAULT_PORT}
 }
 
@@ -160,7 +167,7 @@ function prepare_files() {
   pushd ${TESTS_DIR}/integration
   write_kerb_config
   # base64 -d $WD/grace.keytab.base64 > $TESTS_DIR/integration/grace.keytab
-  eval base64 -d $WD/grace.keytab.base64 > $TESTS_DIR/integration/grace.keytab
+  eval base64 -d -i $WD/grace.keytab.base64 > $TESTS_DIR/integration/grace.keytab
 }
 
 function remove_files() {
@@ -213,13 +220,20 @@ function output_dev_vars() {
 
 function main() {
   echo 'Starting dev environment, please wait...'
-  start_infrastructure
-  sleep 15  # could loop until `ldapsearch` returns properly....
+
+  if [[ "$1" == "clean" ]]; then
+    stop_infrastructure
+    exit 0
+  fi
 
   # This is like a defer statement in Go, it calls a function that
   # cleans up our Docker objects and stops running Vault when we're
   # done.
   trap stop_infrastructure SIGINT
+  trap 'stop_infrastructure $LINENO' ERR
+
+  start_infrastructure
+  sleep 15  # could loop until `ldapsearch` returns properly....
 
   setup_users
   add_vault_spn
@@ -233,4 +247,5 @@ function main() {
   eval "$sleepcmd"
   return 0
 }
-main
+
+main "$1"

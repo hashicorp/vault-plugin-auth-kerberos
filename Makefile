@@ -67,6 +67,9 @@ fmt:
 dev-env: dev-linux-only
 	./scripts/dev_env.sh
 
+teardown-dev-env:
+	./scripts/dev_env.sh clean
+
 integration: dev-linux-only
 	./scripts/integration_env.sh
 
