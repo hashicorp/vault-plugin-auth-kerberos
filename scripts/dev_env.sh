@@ -38,7 +38,7 @@ function start_infrastructure() {
 function stop_infrastructure() {
   local lineno
   lineno="$1"
-  if [[ -z "$lineno" ]]; then
+  if [[ -n "$lineno" ]]; then
     echo "[ERROR] in $(basename "$0") LINE: $lineno"
   fi
 
