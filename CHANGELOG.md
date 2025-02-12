@@ -4,7 +4,7 @@
 ### February 12, 2025
 
 ### IMPROVEMENTS
-* Bump Go version to 1.23.3
+* Bump Go version to 1.23.6
 * update dependencies
   * `github.com/go-ldap/ldap/v3` -> v3.4.10
   * `github.com/hashicorp/vault/api` -> v1.16.0
