@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/go-hclog"
@@ -34,6 +35,11 @@ func (b *backend) pathLogin() *framework.Path {
 			"authorization": {
 				Type:        framework.TypeString,
 				Description: `SPNEGO Authorization header. Required.`,
+			},
+			"ttl": {
+				Type:        framework.TypeString,
+				Description: "Optional custom TTL for the session token (e.g., '1m')",
+				Default:     "",
 			},
 		},
 		Operations: map[logical.Operation]framework.OperationHandler{
@@ -102,6 +108,7 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 		}
 	}
 
+	// Obtain the SPNEGO token from headers or JSON field
 	authorizationString := ""
 	authorizationHeaders := req.Headers["Authorization"]
 	if len(authorizationHeaders) > 0 {
@@ -163,7 +170,10 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 		// therefore policies, from a separate directory.
 		if ldapCfg.ConfigEntry.UPNDomain != "" && identity.Domain() != ldapCfg.ConfigEntry.UPNDomain {
 			w.WriteHeader(400)
-			_, _ = w.Write([]byte(fmt.Sprintf("identity domain of %q doesn't match LDAP upndomain of %q", identity.Domain(), ldapCfg.ConfigEntry.UPNDomain)))
+			_, _ = w.Write([]byte(fmt.Sprintf(
+				"identity domain of %q doesn't match LDAP upndomain of %q",
+				identity.Domain(), ldapCfg.ConfigEntry.UPNDomain,
+			)))
 			return
 		}
 		authenticated = true
@@ -230,7 +240,10 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 	if err != nil {
 		return nil, errwrap.Wrapf("unable to get user binddn: {{err}}", err)
 	}
-	b.Logger().Debug("auth/ldap: User BindDN fetched", "username", identity.UserName(), "binddn", userBindDN)
+	b.Logger().Debug("auth/ldap: User BindDN fetched",
+		"username", identity.UserName(),
+		"binddn", userBindDN,
+	)
 
 	userDN, err := ldapClient.GetUserDN(ldapCfg.ConfigEntry, ldapConnection, userBindDN, username)
 	if err != nil {
@@ -241,7 +254,10 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 	if err != nil {
 		return nil, errwrap.Wrapf("unable to get ldap groups: {{err}}", err)
 	}
-	b.Logger().Debug("auth/ldap: Groups fetched from server", "num_server_groups", len(ldapGroups), "server_groups", ldapGroups)
+	b.Logger().Debug("auth/ldap: Groups fetched from server",
+		"num_server_groups", len(ldapGroups),
+		"server_groups", ldapGroups,
+	)
 
 	var allGroups []string
 	// Merge local and LDAP groups
@@ -283,6 +299,22 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 		Renewable: false,
 	}
 
+	var ttlRaw string
+
+	// If user set "ttl" in the JSON body
+	if v, ok := d.GetOk("ttl"); ok {
+		ttlRaw = v.(string)
+	}
+
+	// Parse/override
+	if ttlRaw != "" {
+		if userTTL, errTTL := time.ParseDuration(ttlRaw); errTTL == nil {
+			auth.LeaseOptions.TTL = userTTL
+		} else {
+			return logical.ErrorResponse(fmt.Sprintf("invalid ttl format: %v", errTTL)), nil
+		}
+	}
+
 	// Combine our policies with the ones parsed from PopulateTokenAuth.
 	if len(policies) > 0 {
 		auth.Policies = append(auth.Policies, policies...)
@@ -305,6 +337,7 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 	}, nil
 }
 
+// simpleResponseWriter is used internally to capture SPNEGO authentication responses
 type simpleResponseWriter struct {
 	body       []byte
 	statusCode int
