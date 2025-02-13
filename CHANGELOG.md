@@ -6,10 +6,10 @@
 ### IMPROVEMENTS
 * Bump Go version to 1.23.6
 * update dependencies
-  * `github.com/go-ldap/ldap/v3` -> v3.4.10
-  * `github.com/hashicorp/vault/api` -> v1.16.0
-  * `github.com/hashicorp/vault/sdk` -> v0.15.0
-  * `github.com/ory/dockertest/v3` -> v3.11.0
+  * `github.com/go-ldap/ldap/v3` v3.4.8 -> v3.4.10
+  * `github.com/hashicorp/vault/api` v1.14.0 -> v1.16.0
+  * `github.com/hashicorp/vault/sdk` v0.13.0 -> v0.15.0
+  * `github.com/ory/dockertest/v3` v3.10.0 -> v3.11.0
 
 ## v0.13.0
 ### September 3, 2024
