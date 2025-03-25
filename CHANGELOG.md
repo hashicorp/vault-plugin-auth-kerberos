@@ -1,4 +1,10 @@
 ## Unreleased
+IMPROVEMENTS:
+* Updated dependencies:
+    * `github.com/go-jose/go-jose/v4` v4.0.4 -> v4.0.5
+    * `github.com/opencontainers/runc` v1.2.0 -> v1.2.6
+    * `golang.org/x/crypto` v0.32.0 -> v0.36.0
+    * `golang.org/x/net` v0.34.0 -> v0.37.0
 
 ## v0.14.0
 ### February 12, 2025
