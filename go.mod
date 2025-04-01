@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2
 	github.com/hashicorp/vault/api v1.16.0
-	github.com/hashicorp/vault/sdk v0.15.0
+	github.com/hashicorp/vault/sdk v0.15.2
 	github.com/jcmturner/gokrb5/v8 v8.4.4
 	github.com/ory/dockertest/v3 v3.11.0
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0
