@@ -60,7 +60,7 @@ function delete_network() {
 }
 
 function start_vault() {
-  VAULT_CONTAINER=$(docker run --net=${DNS_NAME} -d -ti --cap-add=IPC_LOCK -v $(pwd)/pkg/linux_amd64:/plugins:Z -e "VAULT_DEV_ROOT_TOKEN_ID=${VAULT_TOKEN}" -e "VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:${VAULT_PORT}" -p ${VAULT_PORT}:${VAULT_PORT} hashicorp/vault:${VAULT_IMAGE_TAG} server -dev -dev-plugin-dir=/plugins)
+  VAULT_CONTAINER=$(docker run --net=${DNS_NAME} -d -ti --cap-add=IPC_LOCK -v $(pwd)/pkg/linux_amd64:/plugins:Z -e "VAULT_DEV_ROOT_TOKEN_ID=${VAULT_TOKEN}" -e "VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:${VAULT_PORT}" -p ${VAULT_PORT}:${VAULT_PORT} docker.io/hashicorp/vault:${VAULT_IMAGE_TAG} server -dev -dev-plugin-dir=/plugins)
   export VAULT_ADDR=http://127.0.0.1:${VAULT_PORT}
 }
 
@@ -69,7 +69,7 @@ function stop_vault() {
 }
 
 function start_domain() {
-  SAMBA_CONTAINER=$(docker run --net=${DNS_NAME} -d -ti --privileged -p 135:135 -p 137:137 -p 138:138 -p 139:139 -p 389:389 -p 445:445 -p 464:464 -p 636:636 -p 3268:3268 -p 3269:3269 -e "SAMBA_DC_ADMIN_PASSWD=${DOMAIN_ADMIN_PASS}" -e "KERBEROS_PASSWORD=${DOMAIN_ADMIN_PASS}" -e SAMBA_DC_DOMAIN=${DOMAIN_NAME} -e SAMBA_DC_REALM=${REALM_NAME} "bodsch/docker-samba4:${SAMBA_VER}")
+  SAMBA_CONTAINER=$(docker run --net=${DNS_NAME} -d -ti --privileged -p 135:135 -p 137:137 -p 138:138 -p 139:139 -p 389:389 -p 445:445 -p 464:464 -p 636:636 -p 3268:3268 -p 3269:3269 -e "SAMBA_DC_ADMIN_PASSWD=${DOMAIN_ADMIN_PASS}" -e "KERBEROS_PASSWORD=${DOMAIN_ADMIN_PASS}" -e SAMBA_DC_DOMAIN=${DOMAIN_NAME} -e SAMBA_DC_REALM=${REALM_NAME} "docker.io/bodsch/docker-samba4:${SAMBA_VER}")
   # shouldn't need to publish all these ports as they are only used within the docker network, but figured it may be useful for debugging
 }
 
@@ -178,7 +178,7 @@ function start_domain_joined_container() {
   # Pull the container image first to ensure it will start up quickly,
   # because when we run in the acceptance tests, we detach and move on immediately.
   docker pull python:3.7
-  DOMAIN_JOINED_CONTAINER=$(docker run --net=${DNS_NAME} -d -v "${TESTS_DIR}/integration:/tests:Z" -e KRB5_CONFIG=/tests/krb5.conf -e KRB5_CLIENT_KTNAME=/tests/grace.keytab -t python:3.7 cat)
+  DOMAIN_JOINED_CONTAINER=$(docker run --net=${DNS_NAME} -d -v "${TESTS_DIR}/integration:/tests:Z" -e KRB5_CONFIG=/tests/krb5.conf -e KRB5_CLIENT_KTNAME=/tests/grace.keytab -t docker.io/python:3.7 cat)
 }
 
 function stop_domain_joined_container() {
