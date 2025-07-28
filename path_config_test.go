@@ -42,6 +42,7 @@ func TestConfig_ReadWrite(t *testing.T) {
 		"service_account":      "testuser",
 		"remove_instance_name": true,
 		"add_group_aliases":    true,
+		"disable_pac":          false,
 	}
 
 	req := &logical.Request{
