@@ -1,6 +1,6 @@
 module github.com/hashicorp/vault-plugin-auth-kerberos
 
-go 1.23
+go 1.24
 
 require (
 	github.com/go-ldap/ldap/v3 v3.4.4
