@@ -15,6 +15,7 @@ type kerberosConfig struct {
 	ServiceAccount     string `json:"service_account"`
 	AddGroupAliases    bool   `json:"add_group_aliases"`
 	RemoveInstanceName bool   `json:"remove_instance_name"`
+	DisablePAC         bool   `json:"disable_pac"`
 }
 
 func (b *backend) pathConfig() *framework.Path {
@@ -43,6 +44,10 @@ func (b *backend) pathConfig() *framework.Path {
 			"remove_instance_name": {
 				Type:        framework.TypeBool,
 				Description: `Remove instance/FQDN from keytab principal names.`,
+			},
+			"disable_pac": {
+				Type:        framework.TypeBool,
+				Description: `Disables the processing ot PAC which leads to error when using non-Microsoft Kerberos.`,
 			},
 		},
 		Operations: map[logical.Operation]framework.OperationHandler{
@@ -77,6 +82,7 @@ func (b *backend) pathConfigRead(ctx context.Context, req *logical.Request, data
 				"service_account":      config.ServiceAccount,
 				"add_group_aliases":    config.AddGroupAliases,
 				"remove_instance_name": config.RemoveInstanceName,
+				"disable_pac":          config.DisablePAC,
 			},
 		}, nil
 	}
@@ -95,6 +101,7 @@ func (b *backend) pathConfigWrite(ctx context.Context, req *logical.Request, dat
 
 	addGroupAliases := data.Get("add_group_aliases").(bool)
 	removeInstanceName := data.Get("remove_instance_name").(bool)
+	disablePAC := data.Get("disable_pac").(bool)
 
 	// Check that the keytab is valid by parsing with krb5go
 	if _, err := parseKeytab(kt); err != nil {
@@ -106,6 +113,7 @@ func (b *backend) pathConfigWrite(ctx context.Context, req *logical.Request, dat
 		ServiceAccount:     serviceAccount,
 		AddGroupAliases:    addGroupAliases,
 		RemoveInstanceName: removeInstanceName,
+		DisablePAC:         disablePAC,
 	}
 
 	entry, err := logical.StorageEntryJSON("config", config)

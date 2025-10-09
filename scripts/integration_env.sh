@@ -63,7 +63,7 @@ function start_vault() {
     -e "VAULT_DEV_ROOT_TOKEN_ID=${VAULT_TOKEN}" \
     -e "VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:${VAULT_PORT}" \
     -p ${VAULT_PORT}:${VAULT_PORT} \
-    hashicorp/vault:${VAULT_IMAGE_TAG} server -dev -dev-plugin-dir=/tmp/repo-root/pkg/linux_amd64)
+    docker.io/hashicorp/vault:${VAULT_IMAGE_TAG} server -dev -dev-plugin-dir=/tmp/repo-root/pkg/linux_amd64)
   export VAULT_ADDR=http://127.0.0.1:${VAULT_PORT}
 }
 
@@ -77,7 +77,7 @@ function start_domain() {
     -e "SAMBA_DC_ADMIN_PASSWD=${DOMAIN_ADMIN_PASS}" \
     -e "KERBEROS_PASSWORD=${DOMAIN_ADMIN_PASS}" \
     -e SAMBA_DC_DOMAIN=${DOMAIN_NAME} \
-    -e SAMBA_DC_REALM=${REALM_NAME} "bodsch/docker-samba4:${SAMBA_VER}")
+    -e SAMBA_DC_REALM=${REALM_NAME} "docker.io/bodsch/docker-samba4:${SAMBA_VER}")
   # shouldn't need to publish all these ports as they are only used within the docker network, but figured it may be useful for debugging
 }
 
@@ -231,7 +231,7 @@ function start_domain_joined_container() {
     -v "${TESTS_DIR}/integration:/tests:Z" \
     -e KRB5_CONFIG=/tests/krb5.conf \
     -e KRB5_CLIENT_KTNAME=/tests/grace.keytab \
-    -t python:3.7 cat)
+    -t docker.io/library/python:3.7 cat)
 }
 
 function stop_domain_joined_container() {
