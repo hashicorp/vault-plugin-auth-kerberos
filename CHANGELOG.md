@@ -1,3 +1,19 @@
+## Unreleased
+## v0.17.0
+### March 17, 2026
+
+IMPROVEMENTS:
+* Update dependencies
+  * go 1.25.1 => 1.26.1
+  * github.com/hashicorp/cap/ldap v0.0.0-20250106213447-9047b8b3240f => v0.0.0-20250911140431-44d01434c285
+  * github.com/hashicorp/vault/sdk v0.19.0 => v0.23.0
+  * golang.org/x/text v0.27.0 => v0.31.0
+  * golang.org/x/sys v0.34.0 => v0.38.0
+  * golang.org/x/crypto v0.40.0 => v0.45.0
+  * golang.org/x/net v0.42.0 => v0.47.0
+  * github.com/hashicorp/vault/api v1.21.0 => v1.22.0
+  * github.com/go-ldap/ldap/v3 v3.4.11 => v3.4.12
+
 ## v0.16.0
 ### October 3, 2025
 
