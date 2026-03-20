@@ -1,3 +1,10 @@
+## v0.17.1
+### March 20, 2026
+
+* golang vuln fix (#147)
+* Automated dependency upgrades (#146)
+* Update changelog for v0.17.0 release (#145)
+
 ## v0.17.0
 ### March 18, 2026
 
