@@ -108,6 +108,12 @@ func (b *backend) pathLoginUpdate(ctx context.Context, req *logical.Request, d *
 		authorizationString = authorizationHeaders[0]
 	} else {
 		authorizationString = d.Get("authorization").(string)
+
+		// Add the Authorization header with the negotiated SPNEGO Token retrieved from the body of the API to the header
+		// of the request. Therefore, when the raw request is made later, "rebuiltReq" has it as the header.
+		req.Headers = map[string][]string{
+			"Authorization": {authorizationString},
+		}
 	}
 
 	kt, err := parseKeytab(kerbCfg.Keytab)
