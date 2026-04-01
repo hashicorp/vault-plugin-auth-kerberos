@@ -8,8 +8,8 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2
-	github.com/hashicorp/vault/api v1.22.0
-	github.com/hashicorp/vault/sdk v0.24.0
+	github.com/hashicorp/vault/api v1.23.0
+	github.com/hashicorp/vault/sdk v0.25.0
 	github.com/jcmturner/gokrb5/v8 v8.4.4
 	github.com/ory/dockertest/v3 v3.12.0
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0
