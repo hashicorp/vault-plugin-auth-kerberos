@@ -72,6 +72,11 @@ login_kerberos() {
   docker exec -it "$DOMAIN_JOINED_CONTAINER" python /home/auth-check.py "$VAULT_CONTAINER" "${VAULT_NAMESPACE}"
 }
 
+test_ttl_feature() {
+  docker cp "${BATS_TEST_DIRNAME}"/ttl-test.py "$DOMAIN_JOINED_CONTAINER":/home
+  docker exec -it "$DOMAIN_JOINED_CONTAINER" python /home/ttl-test.py "$VAULT_CONTAINER" "${VAULT_NAMESPACE}"
+}
+
 assert_success() {
   if [ ! "${status?}" -eq 0 ]; then
     echo "${output}"
@@ -99,4 +104,9 @@ assert_success() {
   assert_success
 
   [[ "${output?}" =~ ^Vault[[:space:]]token\:[[:space:]].+$ ]]
+}
+
+@test "auth/kerberos: dynamic TTL feature" {
+  run test_ttl_feature
+  assert_success
 }
