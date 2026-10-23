@@ -1,3 +1,9 @@
+## v0.18.1
+### October 23, 2026
+
+* updated dependencies and go version (#163)
+* Update changelog for v0.18.0 release (#161)
+
 ## v0.18.0
 ### September 11, 2026
 
