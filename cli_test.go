@@ -4,6 +4,7 @@
 package kerberos
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -38,5 +39,20 @@ func TestCLI_RemoveInstanceName(t *testing.T) {
 		if kt.Entries[0].Principal.Components[0] != tc.want {
 			t.Fatalf("expected principal name to be %s, got %s", tc.want, kt.Entries[0].Principal.Components[0])
 		}
+	}
+}
+
+// TestCLIHandler_Help verifies that Help uses BinaryName in the commands it
+// shows and falls back to "vault" when it's unset.
+func TestCLIHandler_Help(t *testing.T) {
+	t.Parallel()
+
+	if help := (&CLIHandler{}).Help(); !strings.Contains(help, "vault login -method=kerberos") {
+		t.Fatalf("expected help to use vault, got:\n%s", help)
+	}
+
+	help := (&CLIHandler{BinaryName: "vault-client"}).Help()
+	if !strings.Contains(help, "vault-client login -method=kerberos") || strings.Contains(help, "vault login") {
+		t.Fatalf("expected help to use vault-client, got:\n%s", help)
 	}
 }

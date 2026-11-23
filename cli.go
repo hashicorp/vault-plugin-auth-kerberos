@@ -19,7 +19,10 @@ import (
 )
 
 // CLIHandler fulfills Vault's LoginHandler interface.
-type CLIHandler struct{}
+type CLIHandler struct {
+	// BinaryName is the executable shown in help. It defaults to "vault".
+	BinaryName string
+}
 
 // Auth takes a client and a config map, and returns a secret if appropriate.
 func (h *CLIHandler) Auth(c *api.Client, m map[string]string) (*api.Secret, error) {
@@ -98,15 +101,20 @@ func (h *CLIHandler) Auth(c *api.Client, m map[string]string) (*api.Secret, erro
 }
 
 func (h *CLIHandler) Help() string {
+	binaryName := h.BinaryName
+	if binaryName == "" {
+		binaryName = "vault"
+	}
+
 	help := `
-Usage: vault login -method=kerberos [CONFIG K=V...]
+Usage: ` + binaryName + ` login -method=kerberos [CONFIG K=V...]
 
   The Kerberos auth method allows users to authenticate using Kerberos
   combined with LDAP.
 
   Example authentication:
 
-      $ vault login -method=kerberos \
+      $ ` + binaryName + ` login -method=kerberos \
             -username=grace \
             -service="HTTP/ab10dfy3be7v.matrix.lan:8200" \
             -realm=MATRIX.LAN \
